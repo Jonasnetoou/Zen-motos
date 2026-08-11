@@ -1,4 +1,9 @@
-// =====================================================================
+ }
+
+    await Share.share(texto, subject: 'Orçamento Zen Motos');
+  }
+
+  // =====================================================================
 // ZEN MOTOS - ORÇAMENTO RÁPIDO
 // App Flutter para orçamentos rápidos de oficina mecânica de motos.
 // Consome Firestore (clientes / pecas), gera PDF padronizado e
@@ -123,6 +128,9 @@ class OrcamentoPage extends StatefulWidget {
 class _OrcamentoPageState extends State<OrcamentoPage> {
   // Controllers
   final TextEditingController _clienteController = TextEditingController();
+  final TextEditingController _cpfCnpjController = TextEditingController();
+  final TextEditingController _telefoneController = TextEditingController();
+  final TextEditingController _veiculoController = TextEditingController();
   final TextEditingController _pecaController = TextEditingController();
   final TextEditingController _valorController = TextEditingController();
   final TextEditingController _qtdController =
@@ -245,6 +253,21 @@ class _OrcamentoPageState extends State<OrcamentoPage> {
     return nome.isEmpty ? 'NÃO INFORMADO' : nome;
   }
 
+  String get _cpfCnpjCliente {
+    final valor = _cpfCnpjController.text.trim();
+    return valor.isEmpty ? 'NÃO INFORMADO' : valor;
+  }
+
+  String get _telefoneCliente {
+    final valor = _telefoneController.text.trim();
+    return valor.isEmpty ? 'NÃO INFORMADO' : valor;
+  }
+
+  String get _veiculoCliente {
+    final valor = _veiculoController.text.trim();
+    return valor.isEmpty ? 'NÃO INFORMADO' : valor;
+  }
+
   // ---------------------------------------------------------------------
   // MONTA O TEXTO PARA WHATSAPP / BLOCO DE NOTAS
   // ---------------------------------------------------------------------
@@ -328,9 +351,9 @@ class _OrcamentoPageState extends State<OrcamentoPage> {
     final azulMarca = PdfColor.fromHex('#0F4C81');
     final verdeAccent = PdfColor.fromHex('#1E8E4F');
 
-    final veiculo = 'NÃO INFORMADO';
-    final cpfCnpj = 'NÃO INFORMADO';
-    final telefoneCliente = 'NÃO INFORMADO';
+    final veiculo = _veiculoCliente;
+    final cpfCnpj = _cpfCnpjCliente;
+    final telefoneCliente = _telefoneCliente;
 
     doc.addPage(
       pw.MultiPage(
@@ -586,7 +609,10 @@ class _OrcamentoPageState extends State<OrcamentoPage> {
   Widget _buildClienteField() {
     return _sectionCard(
       title: 'CLIENTE',
-      child: TypeAheadField<String>(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+      TypeAheadField<String>(
         controller: _clienteController,
         builder: (context, controller, focusNode) {
           return TextField(
@@ -626,6 +652,49 @@ class _OrcamentoPageState extends State<OrcamentoPage> {
           borderRadius: BorderRadius.circular(10),
           child: child,
         ),
+      ),
+
+
+          const SizedBox(height: 12),
+      Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _cpfCnpjController,
+              style: const TextStyle(color: ZenColors.textPrimary),
+              decoration: const InputDecoration(
+                labelText: 'CPF/CNPJ (opcional)',
+                prefixIcon:
+                    Icon(Icons.badge_outlined, color: ZenColors.textSecondary),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextField(
+              controller: _telefoneController,
+              keyboardType: TextInputType.phone,
+              style: const TextStyle(color: ZenColors.textPrimary),
+              decoration: const InputDecoration(
+                labelText: 'Telefone (opcional)',
+                prefixIcon:
+                    Icon(Icons.phone_outlined, color: ZenColors.textSecondary),
+              ),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 12),
+      TextField(
+        controller: _veiculoController,
+        style: const TextStyle(color: ZenColors.textPrimary),
+        decoration: const InputDecoration(
+          labelText: 'Veículo (opcional) — ex: GSX 650F 2010',
+          prefixIcon:
+              Icon(Icons.two_wheeler_outlined, color: ZenColors.textSecondary),
+        ),
+      ),
+        ],
       ),
     );
   }
@@ -906,6 +975,9 @@ class _OrcamentoPageState extends State<OrcamentoPage> {
   @override
   void dispose() {
     _clienteController.dispose();
+    _cpfCnpjController.dispose();
+    _telefoneController.dispose();
+    _veiculoController.dispose();
     _pecaController.dispose();
     _valorController.dispose();
     _qtdController.dispose();
