@@ -59,8 +59,17 @@ jobs:
           sed -i 's/targetSdk = flutter.targetSdkVersion/targetSdk = 35/' android/app/build.gradle.kts
           sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 23/' android/app/build.gradle.kts
 
+      - name: Ajustar nome do app na tela inicial para "Zen Motos"
+        # `flutter create` usa o nome técnico do projeto (zen_motos) como label.
+        # Trocamos pelo nome de exibição correto no launcher do Android.
+        run: |
+          sed -i 's/android:label="zen_motos"/android:label="Zen Motos"/' android/app/src/main/AndroidManifest.xml
+
       - name: Instalar dependências (flutter pub get)
         run: flutter pub get
+
+      - name: Gerar ícone do app a partir de assets/icon/icon.png
+        run: dart run flutter_launcher_icons
 
       - name: Corrigir compileSdk do plugin flutter_keyboard_visibility (patch no pub cache)
         # Esse plugin (dependência interna do flutter_typeahead) foi publicado com
