@@ -50,6 +50,15 @@ jobs:
             flutter create --platforms=android --org com.zenmotos --project-name zen_motos .
           fi
 
+      - name: Ajustar compileSdk/targetSdk/minSdk (compatibilidade com plugins)
+        # Alguns plugins (flutter_typeahead -> flutter_keyboard_visibility, firebase)
+        # exigem compileSdk 34+. Forçamos valores fixos e mais altos que o padrão
+        # gerado pelo `flutter create`, evitando erro de AAR metadata no build.
+        run: |
+          sed -i 's/compileSdk = flutter.compileSdkVersion/compileSdk = 35/' android/app/build.gradle.kts
+          sed -i 's/targetSdk = flutter.targetSdkVersion/targetSdk = 35/' android/app/build.gradle.kts
+          sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 23/' android/app/build.gradle.kts
+
       - name: Instalar dependências (flutter pub get)
         run: flutter pub get
 
