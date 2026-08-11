@@ -1,0 +1,67 @@
+name: Build APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    name: Build Android APK (release)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Configurar Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      # ------------------------------------------------------------------
+      # OPCIONAL - Firebase (google-services.json)
+      # Se o app usa Firebase, crie um secret no GitHub chamado
+      # GOOGLE_SERVICES_JSON contendo o conteúdo do arquivo
+      # android/app/google-services.json em Base64, e descomente o passo
+      # abaixo para que ele seja restaurado antes do build.
+      #
+      # Gerar o Base64 localmente:
+      #   base64 -i android/app/google-services.json | tr -d '\n'
+      # ------------------------------------------------------------------
+      # - name: Restaurar google-services.json
+      #   run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > android/app/google-services.json
+
+      - name: Gerar a pasta android/ (caso ainda não exista no repositório)
+        # Como o projeto foi montado só com pubspec.yaml + lib/main.dart,
+        # este comando cria toda a estrutura nativa Android (gradlew,
+        # AndroidManifest, ícones, etc.) automaticamente a cada build.
+        # Ele NÃO sobrescreve lib/ nem pubspec.yaml, que já existem.
+        run: |
+          if [ ! -d "android" ]; then
+            flutter create --platforms=android --org com.zenmotos --project-name zen_motos .
+          fi
+
+      - name: Instalar dependências (flutter pub get)
+        run: flutter pub get
+
+      - name: Analisar código (opcional, não quebra o build)
+        run: flutter analyze || true
+
+      - name: Build APK release
+        run: flutter build apk --release
+
+      - name: Upload do APK como artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
