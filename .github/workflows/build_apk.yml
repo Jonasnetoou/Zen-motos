@@ -59,25 +59,20 @@ jobs:
           sed -i 's/targetSdk = flutter.targetSdkVersion/targetSdk = 35/' android/app/build.gradle.kts
           sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 23/' android/app/build.gradle.kts
 
-      - name: Forçar compileSdk 35 em todos os módulos (inclusive plugins de terceiros)
-        # Alguns plugins publicados no pub.dev (ex: flutter_keyboard_visibility,
-        # dependência do flutter_typeahead) vêm com compileSdk desatualizado (31)
-        # e isso quebra o build com erro de "AAR metadata". Este bloco força
-        # compileSdk 35 em TODOS os subprojetos/plugins, não só no nosso app.
-        run: |
-          cat <<'EOF' >> android/build.gradle.kts
-
-          subprojects {
-              afterEvaluate {
-                  extensions.findByType(com.android.build.gradle.BaseExtension::class.java)?.let { androidExt ->
-                      androidExt.compileSdkVersion(35)
-                  }
-              }
-          }
-          EOF
-
       - name: Instalar dependências (flutter pub get)
         run: flutter pub get
+
+      - name: Corrigir compileSdk do plugin flutter_keyboard_visibility (patch no pub cache)
+        # Esse plugin (dependência interna do flutter_typeahead) foi publicado com
+        # compileSdk desatualizado (31), o que quebra o build junto com dependências
+        # mais novas (androidx.fragment, androidx.window etc. exigem 34+).
+        # Corrigimos o arquivo gradle do plugin direto no cache do pub, que é
+        # baixado de novo (limpo) a cada execução do CI.
+        run: |
+          find "$HOME/.pub-cache" -path "*flutter_keyboard_visibility*/android/build.gradle" -print -exec \
+            sed -i -E 's/compileSdkVersion[[:space:]]+[0-9]+/compileSdkVersion 35/' {} \;
+          find "$HOME/.pub-cache" -path "*flutter_keyboard_visibility*/android/build.gradle.kts" -print -exec \
+            sed -i -E 's/compileSdk[[:space:]]*=[[:space:]]*[0-9]+/compileSdk = 35/' {} \;
 
       - name: Analisar código (opcional, não quebra o build)
         run: flutter analyze || true
